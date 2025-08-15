@@ -2,12 +2,17 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Layout from '../components/layout'
+import { BackgroundProvider } from '../lib/background-context'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Shade Showdown',
-  description: 'Vote on your favorite colors - Keep, Trade, or Cut!',
+  description: 'Vote on colors using the Keep, Trade, Cut system',
 }
 
 export default function RootLayout({
@@ -18,9 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Layout>
-          {children}
-        </Layout>
+        <BackgroundProvider>
+          <Layout>{children}</Layout>
+        </BackgroundProvider>
       </body>
     </html>
   )
