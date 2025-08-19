@@ -100,6 +100,30 @@ export default function Layout({ children }) {
             )
           })}
         </nav>
+        
+        {/* Favicon logo at bottom */}
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+          <svg width="48" height="48" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <clipPath id="roundedRect">
+                <rect x="0" y="0" width="32" height="32" rx="6" ry="6"/>
+              </clipPath>
+            </defs>
+            
+            <rect x="0" y="0" width="32" height="32" rx="6" ry="6" fill="#2D3748"/>
+            
+            <g clipPath="url(#roundedRect)">
+              {/* First diagonal stripe - white */}
+              <path d="M 32,0 L 0,32 L 0,22 L 22,0 Z" fill="#ffffff"/>
+              
+              {/* Second diagonal stripe - gray */}
+              <path d="M 32,10 L 10,32 L 0,32 L 32,0 Z" fill="#808080"/>
+              
+              {/* Third diagonal stripe - black */}
+              <path d="M 32,20 L 20,32 L 32,32 Z" fill="#000000"/>
+            </g>
+          </svg>
+        </div>
       </div>
 
       {/* Mobile Overlay */}

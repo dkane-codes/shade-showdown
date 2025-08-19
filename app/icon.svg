@@ -1,19 +1,22 @@
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-  <!-- iOS style rounded square background -->
-  <rect x="1" y="1" width="30" height="30" rx="6.5" ry="6.5" fill="#2D3748"/>
+  <defs>
+    <clipPath id="roundedRect">
+      <rect x="0" y="0" width="32" height="32" rx="6" ry="6"/>
+    </clipPath>
+  </defs>
   
-  <!-- Three stripe shape with monochrome shades -->
-  <g transform="translate(16,16)">
-    <!-- Outer container with rounded corners -->
-    <rect x="-8" y="-5" width="16" height="10" rx="2" ry="2" fill="#000000"/>
+  <!-- Rounded square background -->
+  <rect x="0" y="0" width="32" height="32" rx="6" ry="6" fill="#2D3748"/>
+  
+  <!-- Three diagonal stripes clipped to rounded corners -->
+  <g clip-path="url(#roundedRect)">
+    <!-- First diagonal stripe - white -->
+    <path d="M 32,0 L 0,32 L 0,22 L 22,0 Z" fill="#ffffff"/>
     
-    <!-- Top stripe - white (rounded top corners only) -->
-    <path d="M -6,-5 L 6,-5 Q 8,-5 8,-3 L 8,-1.7 L -8,-1.7 L -8,-3 Q -8,-5 -6,-5 Z" fill="#ffffff"/>
+    <!-- Second diagonal stripe - gray -->
+    <path d="M 32,10 L 10,32 L 0,32 L 32,0 Z" fill="#808080"/>
     
-    <!-- Middle stripe - gray (no rounded corners) -->
-    <rect x="-8" y="-1.7" width="16" height="3.4" fill="#808080"/>
-    
-    <!-- Bottom stripe - black (rounded bottom corners only) -->
-    <path d="M -8,1.7 L 8,1.7 L 8,3 Q 8,5 6,5 L -6,5 Q -8,5 -8,3 Z" fill="#000000"/>
+    <!-- Third diagonal stripe - black -->
+    <path d="M 32,20 L 20,32 L 32,32 Z" fill="#000000"/>
   </g>
 </svg>

@@ -47,7 +47,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mt-12 card-glassy">
+        <div className="mt-12 bg-white/20 backdrop-blur-md rounded-xl border border-white/30 p-6 transition-all duration-300 hover:scale-105 hover:bg-white/30">
           <h3 className="text-2xl font-bold mb-6 text-black">How It Works</h3>
           <div className="grid md:grid-cols-3 gap-6 text-sm">
             <div className="bg-white/30 backdrop-blur-sm p-4 rounded-lg border border-white/40">
