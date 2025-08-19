@@ -25,7 +25,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-cal-sans);
   --font-mono: var(--font-inter);
 }
 
@@ -39,9 +39,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  font-variation-settings: 'opsz' 32;
+  font-family: var(--font-cal-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-weight: 400;
@@ -49,16 +47,16 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Ensure headings use Inter font */
+/* Ensure headings use Cal Sans */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: var(--font-cal-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   font-weight: 600;
   letter-spacing: -0.025em;
 }
 
-/* Ensure buttons and interactive elements use Inter */
+/* Ensure buttons and interactive elements use Cal Sans */
 button, input, select, textarea {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: var(--font-cal-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 /* Custom utility classes for gradients */
@@ -84,16 +82,16 @@ button, input, select, textarea {
 
 /* Custom button styles */
 .btn-primary {
-  @apply bg-black text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-800 hover:scale-105 shadow-lg;
+  @apply bg-black text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-800 hover:scale-105 shadow-2xl hover:shadow-black/40;
 }
 
 .btn-secondary {
-  @apply bg-white text-black px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-100 hover:scale-105 shadow-lg border-2 border-black;
+  @apply bg-white/10 backdrop-blur-md text-black px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-white/20 hover:scale-105 shadow-2xl hover:shadow-black/20 border border-white/30;
 }
 
 /* Glassy card styles */
 .card-glassy {
-  @apply bg-white/20 backdrop-blur-md rounded-xl shadow-xl border border-white/30 p-6 transition-all duration-300 hover:scale-105 hover:bg-white/30;
+  @apply bg-white/20 backdrop-blur-md rounded-xl shadow-2xl border border-white/30 p-6 transition-all duration-300 hover:scale-105 hover:bg-white/30 hover:shadow-black/30;
 }
 
 /* Custom text styles */

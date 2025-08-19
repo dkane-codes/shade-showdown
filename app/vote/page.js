@@ -4,6 +4,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useBackground } from '../../lib/background-context'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import 'swiper/css'
+import 'swiper/css/effect-coverflow'
+import { EffectCoverflow } from 'swiper/modules'
+import Link from 'next/link'
+import { NoteIcon, PaintBoardIcon, Award01Icon, CheckmarkBadge03Icon } from 'hugeicons-react'
 
 export default function VotePage() {
   const [colors, setColors] = useState([])
@@ -11,6 +17,8 @@ export default function VotePage() {
   const [votes, setVotes] = useState({ keep: null, trade: null, cut: null })
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(1) // Center card is focused by default
+  const [popup, setPopup] = useState({ isOpen: false, message: '', type: 'success', keptColorId: null })
   const { updateBackground } = useBackground()
 
   useEffect(() => {
@@ -41,6 +49,7 @@ export default function VotePage() {
     const newSet = shuffled.slice(0, 3)
     setCurrentSet(newSet)
     setVotes({ keep: null, trade: null, cut: null })
+    setActiveIndex(1) // Always reset to center card
     
     // Only update background after loading is complete to prevent flash
     if (newSet.length === 3 && !loading) {
@@ -83,9 +92,14 @@ export default function VotePage() {
     })
   }
 
+
+  const showPopup = (message, type = 'success', keptColorId = null) => {
+    setPopup({ isOpen: true, message, type, keptColorId })
+  }
+
   async function submitVotes() {
     if (!votes.keep || !votes.trade || !votes.cut) {
-      alert('Please select Keep, Trade, and Cut for all three colors!')
+      showPopup('Please select Keep, Trade, and Cut for all three colors!', 'error')
       return
     }
 
@@ -103,12 +117,13 @@ export default function VotePage() {
 
       if (error) throw error
 
+      const keptColorId = votes.keep // Store before resetting
       generateRandomSet(colors)
-      alert('Vote submitted! Here\'s your next set.')
+      showPopup('Vote submitted! Here\'s your next set.', 'success', keptColorId)
       
     } catch (error) {
       console.error('Error submitting vote:', error)
-      alert('Error submitting vote. Please try again.')
+      showPopup('Error submitting vote. Please try again.', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -133,14 +148,15 @@ export default function VotePage() {
 
   return (
     <div className="p-8 min-h-screen">
-      <h1 className="text-5xl font-bold mb-4 text-black text-center">
+      <h1 className="text-3xl md:text-5xl font-bold mb-4 text-black text-center">
         Vote on Colors
       </h1>
-      <p className="text-black mb-8 text-center font-medium text-xl">
+      <p className="text-black mb-6 md:mb-8 text-center font-medium text-lg md:text-xl">
         Choose: Keep one, Trade one, Cut one
       </p>
 
-      <div className="grid md:grid-cols-3 gap-8 mb-8">
+      {/* Desktop Layout */}
+      <div className="hidden lg:grid lg:grid-cols-3 gap-8 mb-8">
         {currentSet.map((color) => (
           <div 
             key={color.id} 
@@ -194,6 +210,101 @@ export default function VotePage() {
         ))}
       </div>
 
+      {/* Mobile/Tablet Swiper Layout */}
+      <div className="lg:hidden mb-8 -mx-8 -my-4 py-4">
+        <Swiper
+          effect="coverflow"
+          grabCursor={true}
+          centeredSlides={true}
+          slidesPerView="auto"
+          initialSlide={1}
+          coverflowEffect={{
+            rotate: 0,
+            stretch: 0,
+            depth: 100,
+            modifier: 2,
+            slideShadows: false,
+          }}
+          modules={[EffectCoverflow]}
+          className="h-[28rem] !overflow-visible px-8"
+          onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
+        >
+          {currentSet.map((color, index) => (
+            <SwiperSlide key={color.id} className="w-[75vw] max-w-[300px]">
+              <div className="card-glassy h-full mx-4">
+                <div
+                  className="h-40 w-full rounded-lg shadow-inner mb-3"
+                  style={{ backgroundColor: color.hex_code }}
+                ></div>
+                
+                <div className="px-4 pt-2 pb-0">
+                  <h3 className="text-lg font-bold mb-1 text-center text-black">{color.name}</h3>
+                  <p className="text-black text-center mb-3 font-mono text-sm">{color.hex_code}</p>
+                  
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => handleVote(color.id, 'keep')}
+                      className={`w-full py-2 px-3 rounded-lg font-bold transition-all duration-200 text-sm ${
+                        votes.keep === color.id
+                          ? 'bg-green-500 text-white shadow-lg scale-105'
+                          : 'bg-white/10 backdrop-blur-md text-green-700 hover:bg-white/20 border border-green-500/30'
+                      }`}
+                    >
+                      Keep
+                    </button>
+                    
+                    <button
+                      onClick={() => handleVote(color.id, 'trade')}
+                      className={`w-full py-2 px-3 rounded-lg font-bold transition-all duration-200 text-sm ${
+                        votes.trade === color.id
+                          ? 'bg-yellow-500 text-white shadow-lg scale-105'
+                          : 'bg-white/10 backdrop-blur-md text-yellow-700 hover:bg-white/20 border border-yellow-500/30'
+                      }`}
+                    >
+                      Trade
+                    </button>
+                    
+                    <button
+                      onClick={() => handleVote(color.id, 'cut')}
+                      className={`w-full py-2 px-3 rounded-lg font-bold transition-all duration-200 text-sm ${
+                        votes.cut === color.id
+                          ? 'bg-red-500 text-white shadow-lg scale-105'
+                          : 'bg-white/10 backdrop-blur-md text-red-700 hover:bg-white/20 border border-red-500/30'
+                      }`}
+                    >
+                      Cut
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        
+        {/* Navigation dots for mobile */}
+        <div className="flex justify-center space-x-2 mt-4">
+          {currentSet.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                // We'd need a swiper ref to programmatically slide
+                setActiveIndex(index)
+              }}
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                index === activeIndex 
+                  ? 'bg-white shadow-lg' 
+                  : 'bg-white/40'
+              }`}
+            />
+          ))}
+        </div>
+        
+        {/* Drag instruction */}
+        <p className="text-center text-black/70 text-sm mt-2">
+          Drag left or right to view other colors
+        </p>
+      </div>
+
       <div className="text-center">
         <button
           onClick={submitVotes}
@@ -207,6 +318,77 @@ export default function VotePage() {
           {submitting ? 'Submitting...' : 'Submit Votes'}
         </button>
       </div>
+
+      {/* Popup Modal */}
+      {popup.isOpen && (
+        <>
+          {/* Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+            onClick={() => setPopup({ isOpen: false, message: '', type: 'success' })}
+          />
+          
+          {/* Popup */}
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 
+                          bg-white/20 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 
+                          p-6 max-w-sm mx-4 transition-all duration-300">
+            <div className="text-center">
+              <div className={`mb-4 flex justify-center`}>
+                {popup.type === 'success' ? (
+                  <CheckmarkBadge03Icon size={48} color="black" strokeWidth={2} />
+                ) : (
+                  <div className="text-4xl">⚠️</div>
+                )}
+              </div>
+              <p className="text-black font-medium text-lg mb-6">
+                {popup.message}
+              </p>
+              
+              {popup.type === 'success' ? (
+                // Success popup with three action buttons
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      setPopup({ isOpen: false, message: '', type: 'success', keptColorId: null })
+                      // Vote again - just closes popup to continue voting
+                    }}
+                    className="btn-primary w-full flex items-center justify-center"
+                  >
+                    <NoteIcon size={20} color="white" strokeWidth={2} className="mr-3" />
+                    Vote Again
+                  </button>
+                  {popup.keptColorId && (
+                    <Link
+                      href={`/color/${popup.keptColorId}`}
+                      onClick={() => setPopup({ isOpen: false, message: '', type: 'success', keptColorId: null })}
+                      className="btn-secondary w-full flex items-center justify-center py-4"
+                    >
+                      <PaintBoardIcon size={20} color="black" strokeWidth={2} className="mr-3" />
+                      View Your Keep Color
+                    </Link>
+                  )}
+                  <Link
+                    href="/rankings"
+                    onClick={() => setPopup({ isOpen: false, message: '', type: 'success', keptColorId: null })}
+                    className="btn-secondary w-full flex items-center justify-center py-4"
+                  >
+                    <Award01Icon size={20} color="black" strokeWidth={2} className="mr-3" />
+                    View Rankings
+                  </Link>
+                </div>
+              ) : (
+                // Error popup with just dismiss button
+                <button
+                  onClick={() => setPopup({ isOpen: false, message: '', type: 'success' })}
+                  className="btn-primary"
+                >
+                  Got it!
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

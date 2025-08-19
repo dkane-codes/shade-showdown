@@ -1,0 +1,19 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- iOS style rounded square background -->
+  <rect x="1" y="1" width="30" height="30" rx="6.5" ry="6.5" fill="#2D3748"/>
+  
+  <!-- Three stripe shape with monochrome shades -->
+  <g transform="translate(16,16)">
+    <!-- Outer container with rounded corners -->
+    <rect x="-8" y="-5" width="16" height="10" rx="2" ry="2" fill="#000000"/>
+    
+    <!-- Top stripe - white (rounded top corners only) -->
+    <path d="M -6,-5 L 6,-5 Q 8,-5 8,-3 L 8,-1.7 L -8,-1.7 L -8,-3 Q -8,-5 -6,-5 Z" fill="#ffffff"/>
+    
+    <!-- Middle stripe - gray (no rounded corners) -->
+    <rect x="-8" y="-1.7" width="16" height="3.4" fill="#808080"/>
+    
+    <!-- Bottom stripe - black (rounded bottom corners only) -->
+    <path d="M -8,1.7 L 8,1.7 L 8,3 Q 8,5 6,5 L -6,5 Q -8,5 -8,3 Z" fill="#000000"/>
+  </g>
+</svg>

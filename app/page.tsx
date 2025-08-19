@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { NoteIcon, PaintBoardIcon } from 'hugeicons-react'
 
 export default function HomePage() {
   return (
@@ -14,7 +15,10 @@ export default function HomePage() {
 
         <div className="grid md:grid-cols-2 gap-8">
           <div className="card-glassy">
-            <h2 className="text-2xl font-bold mb-4 text-black">🗳️ Start Voting</h2>
+            <h2 className="text-2xl font-bold mb-4 text-black flex items-center">
+              <NoteIcon size={28} color="black" strokeWidth={2} className="mr-3" />
+              Start Voting
+            </h2>
             <p className="text-black mb-6 font-medium">
               Choose your favorite colors by selecting Keep, Trade, or Cut for sets of three colors.
             </p>
@@ -27,13 +31,16 @@ export default function HomePage() {
           </div>
 
           <div className="card-glassy">
-            <h2 className="text-2xl font-bold mb-4 text-black">🎨 Browse Colors</h2>
+            <h2 className="text-2xl font-bold mb-4 text-black flex items-center">
+              <PaintBoardIcon size={28} color="black" strokeWidth={2} className="mr-3" />
+              Browse Colors
+            </h2>
             <p className="text-black mb-6 font-medium">
               Explore all available colors in our collection of trending 2025 shades.
             </p>
             <Link 
               href="/colors"
-              className="btn-primary"
+              className="btn-primary whitespace-nowrap"
             >
               View All Colors
             </Link>

@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import Link from 'next/link'
 
 export default function ColorsPage() {
   const [colors, setColors] = useState([])
@@ -44,19 +45,18 @@ export default function ColorsPage() {
       
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {colors.map((color) => (
-          <div
-            key={color.id}
-            className="card-glassy hover:scale-105 transition-all duration-300"
-          >
-            <div
-              className="h-24 w-full rounded-lg shadow-inner"
-              style={{ backgroundColor: color.hex_code }}
-            ></div>
-            <div className="p-3">
-              <h3 className="font-bold text-black text-lg">{color.name}</h3>
-              <p className="text-sm text-black font-mono font-medium">{color.hex_code}</p>
+          <Link key={color.id} href={`/color/${color.id}`} className="block">
+            <div className="card-glassy hover:scale-105 transition-all duration-300 cursor-pointer h-full flex flex-col">
+              <div
+                className="h-24 w-full rounded-lg shadow-inner flex-shrink-0"
+                style={{ backgroundColor: color.hex_code }}
+              ></div>
+              <div className="p-3 flex-grow flex flex-col justify-between">
+                <h3 className="font-bold text-black text-lg leading-tight">{color.name}</h3>
+                <p className="text-sm text-black font-mono font-medium mt-1">{color.hex_code}</p>
+              </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

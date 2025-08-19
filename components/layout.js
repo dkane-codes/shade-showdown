@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useBackground } from '../lib/background-context'
+import { Menu04Icon, Home07Icon, PaintBoardIcon, NoteIcon, Award01Icon } from 'hugeicons-react'
 
 export default function Layout({ children }) {
   const pathname = usePathname()
@@ -12,10 +13,10 @@ export default function Layout({ children }) {
   const { currentBackground, getHomeBackground, getColorsBackground, getDefaultVotingBackground } = useBackground()
 
   const navItems = [
-    { href: '/', label: 'Home', icon: '🏠' },
-    { href: '/colors', label: 'All Colors', icon: '🎨' },
-    { href: '/vote', label: 'Vote', icon: '🗳️' },
-    { href: '/rankings', label: 'Rankings', icon: '🏆' },
+    { href: '/', label: 'Home', icon: Home07Icon },
+    { href: '/colors', label: 'All Colors', icon: PaintBoardIcon },
+    { href: '/vote', label: 'Vote', icon: NoteIcon },
+    { href: '/rankings', label: 'Rankings', icon: Award01Icon },
   ]
 
   const toggleSidebar = () => {
@@ -59,15 +60,15 @@ export default function Layout({ children }) {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 md:hidden bg-white/20 backdrop-blur-md w-12 h-12 rounded-full shadow-lg border border-white/30 flex items-center justify-center"
+        className="fixed top-4 right-4 z-50 md:hidden bg-white/10 backdrop-blur-md w-12 h-12 rounded-full shadow-2xl hover:shadow-black/30 border border-white/30 flex items-center justify-center transition-all duration-200 text-black hover:bg-white/20"
       >
-        <span className="text-2xl">☰</span>
+        <Menu04Icon size={24} color="black" strokeWidth={3} />
       </button>
       
-      {/* Left Sidebar - positioned absolutely over background */}
+      {/* Left Sidebar - positioned fixed for proper scroll behavior */}
       <div className={`
-        absolute left-0 top-0 w-64 h-[calc(100%-32px)] bg-white/10 backdrop-blur-md shadow-2xl rounded-r-3xl mt-4 mr-4 mb-4
-        transition-transform duration-300 ease-in-out z-40
+        fixed left-0 top-0 w-64 h-[calc(100vh-32px)] bg-white/10 backdrop-blur-md shadow-2xl drop-shadow-2xl rounded-r-3xl mt-4 mr-4 mb-4
+        transition-transform duration-300 ease-in-out z-60
         md:translate-x-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
@@ -76,21 +77,28 @@ export default function Layout({ children }) {
         </div>
         
         <nav className="mt-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setIsSidebarOpen(false)}
-              className={`flex items-center px-6 py-3 text-left w-full transition-all duration-200 ${
-                pathname === item.href
-                  ? 'bg-white/30 backdrop-blur-md text-black shadow-lg'
-                  : 'text-black hover:bg-white/20 hover:text-black'
-              }`}
-            >
-              <span className="text-xl mr-3 text-black">{item.icon}</span>
-              <span className="font-bold">{item.label}</span>
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const IconComponent = item.icon
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setIsSidebarOpen(false)}
+                className={`flex items-center px-6 py-3 text-left w-full transition-all duration-200 ${
+                  pathname === item.href
+                    ? 'bg-white/30 backdrop-blur-md text-black shadow-lg'
+                    : 'text-black hover:bg-white/20 hover:text-black'
+                }`}
+              >
+                {typeof IconComponent === 'string' ? (
+                  <span className="text-xl mr-3 text-black">{IconComponent}</span>
+                ) : (
+                  <IconComponent size={20} color="black" strokeWidth={2} className="mr-3" />
+                )}
+                <span className="font-bold">{item.label}</span>
+              </Link>
+            )
+          })}
         </nav>
       </div>
 
@@ -103,7 +111,7 @@ export default function Layout({ children }) {
       )}
 
       {/* Main Content - with left margin to account for sidebar */}
-      <div className="ml-0 md:ml-72 overflow-auto transition-all duration-300">
+      <div className="ml-0 md:ml-72 overflow-auto transition-all duration-300 pt-8 md:pt-0">
         {children}
       </div>
     </div>

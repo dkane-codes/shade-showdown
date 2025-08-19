@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Outfit } from 'next/font/google'
 import './globals.css'
 import Layout from '../components/layout'
 import { BackgroundProvider } from '../lib/background-context'
@@ -7,6 +7,13 @@ import { BackgroundProvider } from '../lib/background-context'
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+})
+
+// Outfit is very similar to Cal Sans - modern, clean, rounded
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-cal-sans',
   display: 'swap',
 })
 
@@ -22,7 +29,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${outfit.variable} ${outfit.className}`}>
         <BackgroundProvider>
           <Layout>{children}</Layout>
         </BackgroundProvider>
