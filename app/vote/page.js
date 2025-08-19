@@ -1,7 +1,7 @@
 // app/vote/page.js
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useBackground } from '../../lib/background-context'
 import { Swiper, SwiperSlide } from 'swiper/react'
@@ -20,6 +20,7 @@ export default function VotePage() {
   const [activeIndex, setActiveIndex] = useState(1) // Center card is focused by default
   const [popup, setPopup] = useState({ isOpen: false, message: '', type: 'success', keptColorId: null })
   const { updateBackground } = useBackground()
+  const [swiperInstance, setSwiperInstance] = useState(null)
 
   useEffect(() => {
     fetchColorsAndGenerateSet()
@@ -226,14 +227,22 @@ export default function VotePage() {
             slideShadows: false,
           }}
           modules={[EffectCoverflow]}
-          className="h-[28rem] !overflow-visible px-8"
+          className="h-[24rem] !overflow-visible px-8"
+          onSwiper={setSwiperInstance}
           onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
         >
           {currentSet.map((color, index) => (
-            <SwiperSlide key={color.id} className="w-[75vw] max-w-[300px]">
-              <div className="card-glassy h-full mx-4">
+            <SwiperSlide key={color.id} className="w-[65vw] max-w-[250px]">
+              <div 
+                className="card-glassy h-full mx-4 cursor-pointer" 
+                onClick={() => {
+                  if (swiperInstance && index !== activeIndex) {
+                    swiperInstance.slideTo(index)
+                  }
+                }}
+              >
                 <div
-                  className="h-40 w-full rounded-lg shadow-inner mb-3"
+                  className="h-32 w-full rounded-lg shadow-inner mb-3"
                   style={{ backgroundColor: color.hex_code }}
                 ></div>
                 
@@ -287,8 +296,9 @@ export default function VotePage() {
             <button
               key={index}
               onClick={() => {
-                // We'd need a swiper ref to programmatically slide
-                setActiveIndex(index)
+                if (swiperInstance) {
+                  swiperInstance.slideTo(index)
+                }
               }}
               className={`w-3 h-3 rounded-full transition-all duration-200 ${
                 index === activeIndex 
@@ -331,7 +341,7 @@ export default function VotePage() {
           {/* Popup */}
           <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 
                           bg-white/20 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 
-                          p-6 max-w-sm mx-4 transition-all duration-300">
+                          p-6 w-[80vw] max-w-sm transition-all duration-300">
             <div className="text-center">
               <div className={`mb-4 flex justify-center`}>
                 {popup.type === 'success' ? (

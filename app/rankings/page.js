@@ -99,34 +99,69 @@ export default function RankingsPage() {
           <div className="space-y-4">
             {colorRankings.map((color, index) => (
               <Link key={color.id} href={`/color/${color.id}`} className="block">
-                <div className="card-glassy p-6 hover:scale-102 transition-all duration-200 cursor-pointer mb-4">
-                  <div className="flex items-center gap-4">
-                  {/* Rank Number */}
-                  <div className="flex-shrink-0 w-12 h-12 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center">
-                    <span className="text-xl font-bold text-black">#{index + 1}</span>
-                  </div>
+                <div className="card-glassy p-4 md:p-6 hover:scale-102 transition-all duration-200 cursor-pointer mb-4">
+                  {/* Desktop Layout */}
+                  <div className="hidden md:flex items-center gap-4">
+                    {/* Rank Number */}
+                    <div className="flex-shrink-0 w-12 h-12 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <span className="text-xl font-bold text-black">#{index + 1}</span>
+                    </div>
 
-                  {/* Color Square */}
-                  <div 
-                    className="flex-shrink-0 w-16 h-16 rounded-lg shadow-lg border-2 border-white/30"
-                    style={{ backgroundColor: color.hex_code }}
-                  ></div>
+                    {/* Color Square */}
+                    <div 
+                      className="flex-shrink-0 w-16 h-16 rounded-lg shadow-lg border-2 border-white/30"
+                      style={{ backgroundColor: color.hex_code }}
+                    ></div>
 
-                  {/* Color Info */}
-                  <div className="flex-grow">
-                    <h3 className="text-xl font-bold text-black mb-1">{color.name}</h3>
-                    <p className="text-black font-mono text-sm opacity-80">{color.hex_code}</p>
-                  </div>
+                    {/* Color Info */}
+                    <div className="flex-grow">
+                      <h3 className="text-xl font-bold text-black mb-1">{color.name}</h3>
+                      <p className="text-black font-mono text-sm opacity-80">{color.hex_code}</p>
+                    </div>
 
-                  {/* Vote Counts */}
-                  <div className="flex-shrink-0 text-right">
-                    <div className="text-2xl font-bold text-black mb-1">{color.totalScore} pts</div>
-                    <div className="text-sm flex gap-2 justify-end">
-                      <span className="bg-green-500/20 backdrop-blur-sm px-2 py-1 rounded-full text-black font-semibold border border-green-500/30">{color.keepVotes} Keep</span>
-                      <span className="bg-yellow-500/20 backdrop-blur-sm px-2 py-1 rounded-full text-black font-semibold border border-yellow-500/30">{color.tradeVotes} Trade</span>
-                      <span className="bg-red-500/20 backdrop-blur-sm px-2 py-1 rounded-full text-black font-semibold border border-red-500/30">{color.cutVotes} Cut</span>
+                    {/* Vote Counts */}
+                    <div className="flex-shrink-0 text-right">
+                      <div className="text-2xl font-bold text-black mb-1">{color.totalScore} pts</div>
+                      <div className="text-sm flex gap-2 justify-end">
+                        <span className="bg-green-500/20 backdrop-blur-sm px-2 py-1 rounded-full text-black font-semibold border border-green-500/30">{color.keepVotes} Keep</span>
+                        <span className="bg-yellow-500/20 backdrop-blur-sm px-2 py-1 rounded-full text-black font-semibold border border-yellow-500/30">{color.tradeVotes} Trade</span>
+                        <span className="bg-red-500/20 backdrop-blur-sm px-2 py-1 rounded-full text-black font-semibold border border-red-500/30">{color.cutVotes} Cut</span>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Mobile Layout */}
+                  <div className="md:hidden">
+                    <div className="flex items-center gap-3 mb-3">
+                      {/* Rank Number */}
+                      <div className="flex-shrink-0 w-10 h-10 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <span className="text-lg font-bold text-black">#{index + 1}</span>
+                      </div>
+
+                      {/* Color Square */}
+                      <div 
+                        className="flex-shrink-0 w-12 h-12 rounded-lg shadow-lg border-2 border-white/30"
+                        style={{ backgroundColor: color.hex_code }}
+                      ></div>
+
+                      {/* Color Info */}
+                      <div className="flex-grow">
+                        <h3 className="text-lg font-bold text-black mb-1">{color.name}</h3>
+                        <p className="text-black font-mono text-xs opacity-80">{color.hex_code}</p>
+                      </div>
+
+                      {/* Points */}
+                      <div className="flex-shrink-0 text-right">
+                        <div className="text-xl font-bold text-black">{color.totalScore} pts</div>
+                      </div>
+                    </div>
+
+                    {/* Vote Stats - Wrapped on separate line for mobile */}
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      <span className="bg-green-500/20 backdrop-blur-sm px-2 py-1 rounded-full text-black font-semibold border border-green-500/30 text-sm">{color.keepVotes} Keep</span>
+                      <span className="bg-yellow-500/20 backdrop-blur-sm px-2 py-1 rounded-full text-black font-semibold border border-yellow-500/30 text-sm">{color.tradeVotes} Trade</span>
+                      <span className="bg-red-500/20 backdrop-blur-sm px-2 py-1 rounded-full text-black font-semibold border border-red-500/30 text-sm">{color.cutVotes} Cut</span>
+                    </div>
                   </div>
                 </div>
               </Link>
