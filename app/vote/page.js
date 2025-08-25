@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useBackground } from '../../lib/background-context'
+import { ratingAlgorithm } from '../../lib/rating-algorithm'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import 'swiper/css'
 import 'swiper/css/effect-coverflow'
@@ -15,6 +16,7 @@ export default function VotePage() {
   const [colors, setColors] = useState([])
   const [currentSet, setCurrentSet] = useState([])
   const [votes, setVotes] = useState({ keep: null, trade: null, cut: null })
+  const [votedSets, setVotedSets] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [activeIndex, setActiveIndex] = useState(1) // Center card is focused by default
@@ -34,8 +36,9 @@ export default function VotePage() {
       
       if (error) throw error
       
+      
       setColors(data || [])
-      generateRandomSet(data || [])
+      generateSimilarRankingSet(data || [])
     } catch (error) {
       console.error('Error fetching colors:', error)
     } finally {
@@ -43,18 +46,103 @@ export default function VotePage() {
     }
   }
 
-  function generateRandomSet(allColors) {
+  function generateSimilarRankingSet(allColors) {
     if (allColors.length < 3) return
     
-    const shuffled = [...allColors].sort(() => 0.5 - Math.random())
-    const newSet = shuffled.slice(0, 3)
-    setCurrentSet(newSet)
-    setVotes({ keep: null, trade: null, cut: null })
-    setActiveIndex(1) // Always reset to center card
+    // Get colors with their ratings, defaulting to base rating if not set
+    const colorsWithRatings = allColors.map(color => ({
+      ...color,
+      effectiveRating: color.rating || ratingAlgorithm.getBaseRating()
+    }))
     
-    // Only update background after loading is complete to prevent flash
-    if (newSet.length === 3 && !loading) {
-      const [color1, color2, color3] = newSet
+    // Sort by rating to group similar colors
+    const sortedColors = colorsWithRatings.sort((a, b) => b.effectiveRating - a.effectiveRating)
+    
+    // Find available colors not in recent sets
+    const recentColorIds = new Set(votedSets.flat())
+    const availableColors = sortedColors.filter(color => !recentColorIds.has(color.id))
+    
+    // If we don't have enough available colors, reset the voted sets
+    if (availableColors.length < 3) {
+      setVotedSets([])
+      return generateSimilarRankingSet(allColors)
+    }
+    
+    // Group colors into rating tiers
+    const ratingTiers = groupColorsByRatingTiers(availableColors)
+    
+    // Select a tier with at least 3 colors, preferring middle tiers
+    const selectedTier = selectOptimalTier(ratingTiers)
+    
+    if (selectedTier.length >= 3) {
+      // Pick 3 random colors from the selected tier
+      const shuffledTier = [...selectedTier].sort(() => 0.5 - Math.random())
+      const newSet = shuffledTier.slice(0, 3)
+      
+      setCurrentSet(newSet)
+      setVotes({ keep: null, trade: null, cut: null })
+      setActiveIndex(1)
+      
+      // Track this set to avoid repeating too soon
+      const setIds = newSet.map(c => c.id)
+      setVotedSets(prev => [...prev, setIds].slice(-10)) // Keep last 10 sets
+      
+      updateSetBackground(newSet)
+    } else {
+      // Fallback to random selection if no good tiers found
+      const shuffled = [...availableColors].sort(() => 0.5 - Math.random())
+      const newSet = shuffled.slice(0, 3)
+      setCurrentSet(newSet)
+      setVotes({ keep: null, trade: null, cut: null })
+      setActiveIndex(1)
+      updateSetBackground(newSet)
+    }
+  }
+  
+  function groupColorsByRatingTiers(colors) {
+    const tiers = []
+    const tierSize = 10 // Rating points per tier
+    
+    // Group colors into rating ranges
+    const tierMap = new Map()
+    
+    colors.forEach(color => {
+      const tierKey = Math.floor(color.effectiveRating / tierSize) * tierSize
+      if (!tierMap.has(tierKey)) {
+        tierMap.set(tierKey, [])
+      }
+      tierMap.get(tierKey).push(color)
+    })
+    
+    return Array.from(tierMap.values()).filter(tier => tier.length >= 3)
+  }
+  
+  function selectOptimalTier(tiers) {
+    if (tiers.length === 0) return []
+    
+    // Prefer middle-tier colors for more competitive matchups
+    // Sort tiers by average rating and pick from middle ranges
+    const tiersWithAverage = tiers.map(tier => ({
+      tier,
+      averageRating: tier.reduce((sum, color) => sum + color.effectiveRating, 0) / tier.length
+    }))
+    
+    tiersWithAverage.sort((a, b) => b.averageRating - a.averageRating)
+    
+    // Prefer tiers that are not at the extremes (avoid always top or bottom)
+    const middleIndex = Math.floor(tiersWithAverage.length / 2)
+    const startIndex = Math.max(0, middleIndex - 1)
+    const endIndex = Math.min(tiersWithAverage.length, middleIndex + 2)
+    
+    const candidateTiers = tiersWithAverage.slice(startIndex, endIndex)
+    const selectedTierData = candidateTiers[Math.floor(Math.random() * candidateTiers.length)]
+    
+    return selectedTierData ? selectedTierData.tier : tiers[0]
+  }
+  
+  function updateSetBackground(colorSet) {
+    if (colorSet.length === 3 && !loading) {
+      const [color1, color2, color3] = colorSet
       const newGradient = `linear-gradient(135deg, ${color1.hex_code} 0%, ${color2.hex_code} 50%, ${color3.hex_code} 100%)`
       updateBackground('voting', newGradient)
     }
@@ -63,9 +151,7 @@ export default function VotePage() {
   // Update background when loading completes and we have colors
   useEffect(() => {
     if (!loading && currentSet.length === 3) {
-      const [color1, color2, color3] = currentSet
-      const newGradient = `linear-gradient(135deg, ${color1.hex_code} 0%, ${color2.hex_code} 50%, ${color3.hex_code} 100%)`
-      updateBackground('voting', newGradient)
+      updateSetBackground(currentSet)
     }
   }, [loading, currentSet, updateBackground])
 
@@ -92,52 +178,143 @@ export default function VotePage() {
       return newVotes
     })
   }
-
-
-  const showPopup = (message, type = 'success', keptColorId = null) => {
-    setPopup({ isOpen: true, message, type, keptColorId })
-  }
-
+  
   async function submitVotes() {
     if (!votes.keep || !votes.trade || !votes.cut) {
       showPopup('Please select Keep, Trade, and Cut for all three colors!', 'error')
       return
     }
 
+    // Validate that all vote IDs are different
+    const voteIds = [votes.keep, votes.trade, votes.cut]
+    if (new Set(voteIds).size !== 3) {
+      showPopup('Please select different colors for Keep, Trade, and Cut!', 'error')
+      return
+    }
+    
+    // Validate that vote IDs exist in current set
+    const currentSetIds = currentSet.map(c => c.id)
+    const invalidVotes = voteIds.filter(id => !currentSetIds.includes(id))
+    if (invalidVotes.length > 0) {
+      console.error('Invalid vote IDs:', invalidVotes, 'Current set IDs:', currentSetIds)
+      showPopup('Error: Invalid color selection. Please refresh and try again.', 'error')
+      return
+    }
+
     setSubmitting(true)
     
     try {
-      const { error } = await supabase
-        .from('votes')
-        .insert([{
-          color_keep: votes.keep,
-          color_trade: votes.trade,
-          color_cut: votes.cut,
-          category_id: null
-        }])
-
-      if (error) throw error
-
+      // First, try to submit individual votes (new system)
+      const individualVotes = [
+        { color_id: votes.keep, vote_type: 'keep', created_at: new Date().toISOString() },
+        { color_id: votes.trade, vote_type: 'trade', created_at: new Date().toISOString() },
+        { color_id: votes.cut, vote_type: 'cut', created_at: new Date().toISOString() }
+      ]
+      
+      const { error: voteError } = await supabase
+        .from('individual_votes')
+        .insert(individualVotes)
+      
+      if (voteError) {
+        // If individual_votes table doesn't exist, fall back to old system
+        console.log('individual_votes table not found, falling back to old vote system')
+        
+        const { error: oldVoteError } = await supabase
+          .from('votes')
+          .insert([{
+            color_keep: votes.keep,
+            color_trade: votes.trade,
+            color_cut: votes.cut,
+            category_id: null
+          }])
+        
+        if (oldVoteError) {
+          console.error('Database error details:', oldVoteError)
+          throw new Error(`Database error: ${oldVoteError.message || 'Unknown error'}`)
+        }
+        
+      } else {
+        // Update ratings for all three colors using new system
+        await updateColorRatings([votes.keep, votes.trade, votes.cut])
+      }
+      
       const keptColorId = votes.keep // Store before resetting
-      generateRandomSet(colors)
-      showPopup('Vote submitted! Here\'s your next set.', 'success', keptColorId)
+      generateSimilarRankingSet(colors)
+      showPopup('Votes submitted! Here\'s your next set.', 'success', keptColorId)
       
     } catch (error) {
-      console.error('Error submitting vote:', error)
-      showPopup('Error submitting vote. Please try again.', 'error')
+      console.error('Error submitting votes:', {
+        error: error.message,
+        details: error,
+        votes: votes
+      })
+      showPopup(`Error submitting votes: ${error.message || 'Please try again.'}`, 'error')
     } finally {
       setSubmitting(false)
     }
   }
-
-  // Create dynamic background gradient from current colors
-  const getDynamicBackground = () => {
-    if (currentSet.length === 3) {
-      const [color1, color2, color3] = currentSet
-      return `linear-gradient(135deg, ${color1.hex_code} 0%, ${color2.hex_code} 50%, ${color3.hex_code} 100%)`
+  
+  async function updateColorRatings(colorIds) {
+    
+    for (const colorId of colorIds) {
+      try {
+        // Get current color data
+        const { data: colorData, error: colorError } = await supabase
+          .from('colors')
+          .select('*')
+          .eq('id', colorId)
+          .single()
+        
+        if (colorError) continue
+        
+        // Get all votes for this color
+        const { data: allVotes, error: votesError } = await supabase
+          .from('individual_votes')
+          .select('*')
+          .eq('color_id', colorId)
+          .order('created_at', { ascending: true })
+        
+        if (votesError) continue
+        
+        if (!allVotes || allVotes.length === 0) continue
+        
+        // Calculate new rating by processing all votes chronologically
+        let currentRating = ratingAlgorithm.getBaseRating()
+        
+        allVotes.forEach((vote, index) => {
+          currentRating = ratingAlgorithm.calculateNewRating(
+            currentRating,
+            vote.vote_type,
+            index
+          )
+        })
+        
+        // Update the color's rating
+        const { error: updateError } = await supabase
+          .from('colors')
+          .update({ 
+            rating: Math.round(currentRating * 100) / 100, // Round to 2 decimal places
+            total_votes: allVotes.length,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', colorId)
+        
+        if (updateError) {
+          console.error(`Error updating color ${colorId} rating:`, updateError)
+        }
+          
+      } catch (error) {
+        console.error(`Error updating rating for color ${colorId}:`, error)
+      }
     }
-    return 'var(--gradient-primary)' // fallback
   }
+
+
+  const showPopup = (message, type = 'success', keptColorId = null) => {
+    setPopup({ isOpen: true, message, type, keptColorId })
+  }
+
+
 
   if (loading) {
     return (
@@ -153,7 +330,7 @@ export default function VotePage() {
         Vote on Colors
       </h1>
       <p className="text-black mb-6 md:mb-8 text-center font-medium text-lg md:text-xl">
-        Choose: Keep one, Trade one, Cut one
+        Choose: Keep one, Trade one, Cut one (similar-ranked colors)
       </p>
 
       {/* Desktop Layout */}
@@ -170,7 +347,17 @@ export default function VotePage() {
             
             <div className="p-4">
               <h3 className="text-xl font-bold mb-2 text-center text-black">{color.name}</h3>
-              <p className="text-black text-center mb-4 font-mono font-medium">{color.hex_code}</p>
+              <p className="text-black text-center mb-2 font-mono font-medium">{color.hex_code}</p>
+              
+              {/* Rating Display */}
+              <div className="text-center mb-4">
+                <div className="text-sm text-black/70">Rating: {Math.round(color.rating || ratingAlgorithm.getBaseRating())}/100</div>
+                {color.total_votes && (
+                  <div className="text-xs text-black/60">
+                    {color.total_votes} votes • {Math.round(ratingAlgorithm.calculateConfidence(color.total_votes) * 100)}% conf
+                  </div>
+                )}
+              </div>
               
               <div className="space-y-3">
                 <button
@@ -211,6 +398,7 @@ export default function VotePage() {
         ))}
       </div>
 
+
       {/* Mobile/Tablet Swiper Layout */}
       <div className="lg:hidden mb-8 -mx-8 -my-4 py-4">
         <Swiper
@@ -227,7 +415,7 @@ export default function VotePage() {
             slideShadows: false,
           }}
           modules={[EffectCoverflow]}
-          className="h-[24rem] !overflow-visible px-8"
+          className="h-[28rem] !overflow-visible px-8"
           onSwiper={setSwiperInstance}
           onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
         >
@@ -246,9 +434,17 @@ export default function VotePage() {
                   style={{ backgroundColor: color.hex_code }}
                 ></div>
                 
-                <div className="px-4 pt-2 pb-0">
+                <div className="px-4 pt-2 pb-2">
                   <h3 className="text-lg font-bold mb-1 text-center text-black">{color.name}</h3>
-                  <p className="text-black text-center mb-3 font-mono text-sm">{color.hex_code}</p>
+                  <p className="text-black text-center mb-2 font-mono text-sm">{color.hex_code}</p>
+                  
+                  {/* Rating Display */}
+                  <div className="text-center mb-3">
+                    <div className="text-xs text-black/70">Rating: {Math.round(color.rating || ratingAlgorithm.getBaseRating())}/100</div>
+                    {color.total_votes && (
+                      <div className="text-xs text-black/60">{color.total_votes}v • {Math.round(ratingAlgorithm.calculateConfidence(color.total_votes) * 100)}%</div>
+                    )}
+                  </div>
                   
                   <div className="space-y-2">
                     <button
@@ -315,7 +511,8 @@ export default function VotePage() {
         </p>
       </div>
 
-      <div className="text-center">
+      {/* Submit Votes Button */}
+      <div className="text-center mb-8">
         <button
           onClick={submitVotes}
           disabled={submitting || !votes.keep || !votes.trade || !votes.cut}
@@ -327,7 +524,25 @@ export default function VotePage() {
         >
           {submitting ? 'Submitting...' : 'Submit Votes'}
         </button>
+        
+        {/* Skip Set Button */}
+        <div className="mt-4">
+          <button
+            onClick={() => generateSimilarRankingSet(colors)}
+            disabled={submitting}
+            className="px-6 py-2 rounded-lg font-medium transition-all duration-200 bg-white/10 backdrop-blur-md text-black hover:bg-white/20 border border-white/30 hover:scale-105 text-sm"
+          >
+            Skip This Set
+          </button>
+        </div>
       </div>
+
+      {/* Progress Indicator */}
+      {votedSets.length > 0 && (
+        <div className="text-center text-black/70">
+          <p>You've voted on {votedSets.length} set{votedSets.length !== 1 ? 's' : ''} of similar-ranked colors</p>
+        </div>
+      )}
 
       {/* Popup Modal */}
       {popup.isOpen && (
@@ -360,12 +575,12 @@ export default function VotePage() {
                   <button
                     onClick={() => {
                       setPopup({ isOpen: false, message: '', type: 'success', keptColorId: null })
-                      // Vote again - just closes popup to continue voting
+                      // Continue voting - just closes popup
                     }}
                     className="btn-primary w-full flex items-center justify-center"
                   >
                     <NoteIcon size={20} color="white" strokeWidth={2} className="mr-3" />
-                    Vote Again
+                    Continue Voting
                   </button>
                   {popup.keptColorId && (
                     <Link
@@ -389,7 +604,7 @@ export default function VotePage() {
               ) : (
                 // Error popup with just dismiss button
                 <button
-                  onClick={() => setPopup({ isOpen: false, message: '', type: 'success' })}
+                  onClick={() => setPopup({ isOpen: false, message: '', type: 'success', keptColorId: null })}
                   className="btn-primary"
                 >
                   Got it!
